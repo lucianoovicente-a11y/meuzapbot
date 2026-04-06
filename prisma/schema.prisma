@@ -1,0 +1,298 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  admin
+  reseller
+}
+
+enum SubscriptionStatus {
+  active
+  expired
+  cancelled
+  trial
+}
+
+enum BotType {
+  private
+  group
+}
+
+enum AIProvider {
+  openai
+  gemini
+  groq
+}
+
+enum InstanceType {
+  whatsapp
+  telegram
+}
+
+enum InstanceStatus {
+  disconnected
+  connecting
+  connected
+  failed
+}
+
+enum MessageDirection {
+  inbound
+  outbound
+}
+
+enum MessageType {
+  text
+  image
+  audio
+  video
+  document
+}
+
+enum CredentialType {
+  oauth2
+  service_account
+}
+
+model User {
+  id            String   @id @default(uuid())
+  name          String
+  email         String   @unique
+  password      String
+  role          UserRole @default(reseller)
+  parentId      String?
+  parent        User?    @relation("UserHierarchy", fields: [parentId], references: [id])
+  children      User[]   @relation("UserHierarchy")
+  isActive      Boolean  @default(true)
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+
+  clients      Client[]
+  apiKeys      ApiKey[]
+  googleCredentials GoogleCredential[]
+  subscriptions Subscription[]
+  auditLogs    AuditLog[]
+
+  @@map("users")
+}
+
+model Plan {
+  id             String   @id @default(uuid())
+  name           String
+  description    String?  @db.Text
+  maxBots        Int      @default(1)
+  maxClients     Int      @default(10)
+  maxInstances   Int      @default(5)
+  priceMonthly   Decimal  @default(0) @db.Decimal(10, 2)
+  priceYearly    Decimal  @default(0) @db.Decimal(10, 2)
+  features       Json     @default("{}")
+  isActive       Boolean  @default(true)
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  subscriptions  Subscription[]
+
+  @@map("plans")
+}
+
+model Subscription {
+  id        String              @id @default(uuid())
+  userId    String              @map("user_id")
+  planId    String              @map("plan_id")
+  status    SubscriptionStatus  @default(trial)
+  startedAt DateTime            @default(now()) @map("started_at")
+  expiresAt DateTime            @map("expires_at")
+  createdAt DateTime            @default(now()) @map("created_at")
+  updatedAt DateTime            @updatedAt @map("updated_at")
+
+  user      User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  plan      Plan                @relation(fields: [planId], references: [id])
+
+  @@map("subscriptions")
+}
+
+model Client {
+  id        String   @id @default(uuid())
+  userId    String   @map("user_id")
+  name      String
+  email     String?
+  phone     String?
+  company   String?
+  isActive  Boolean  @default(true)
+  metadata  Json     @default("{}")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  bots      Bot[]
+
+  @@index([userId])
+  @@index([email])
+  @@map("clients")
+}
+
+model Bot {
+  id               String     @id @default(uuid())
+  clientId         String     @map("client_id")
+  name             String
+  botType          BotType    @default(private)
+  personalityPrompt String    @map("personality_prompt") @db.Text
+  aiProvider       AIProvider @default(openai) @map("ai_provider")
+  aiModel          String?
+  maxTokens        Int        @default(1000) @map("max_tokens")
+  temperature      Float      @default(0.7)
+  welcomeMessage   String?    @map("welcome_message") @db.Text
+  isActive         Boolean    @default(true)
+  settings         Json       @default("{}")
+  createdAt        DateTime   @default(now()) @map("created_at")
+  updatedAt        DateTime   @updatedAt @map("updated_at")
+
+  client           Client     @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  instances        Instance[]
+  telegramGroups   TelegramGroup[]
+  webhooks         Webhook[]
+
+  @@index([clientId])
+  @@index([botType])
+  @@map("bots")
+}
+
+model Instance {
+  id             String         @id @default(uuid())
+  botId          String?        @map("bot_id")
+  instanceType   InstanceType   @map("instance_type")
+  instanceName   String         @unique
+  phoneNumber    String?        @map("phone_number")
+  tokenTelegram  String?        @map("token_telegram")
+  status         InstanceStatus @default(disconnected)
+  qrCode         String?        @map("qr_code") @db.Text
+  qrExpiresAt    DateTime?      @map("qr_expires_at")
+  sessionData    String?        @map("session_data") @db.Text
+  webhookUrl     String?
+  lastSeenAt     DateTime?      @map("last_seen_at")
+  createdAt      DateTime       @default(now()) @map("created_at")
+  updatedAt      DateTime       @updatedAt @map("updated_at")
+
+  bot            Bot?           @relation(fields: [botId], references: [id], onDelete: Cascade)
+  conversations  Conversation[]
+
+  @@index([botId])
+  @@index([status])
+  @@index([instanceName])
+  @@map("instances")
+}
+
+model ApiKey {
+  id          String     @id @default(uuid())
+  userId      String     @map("user_id")
+  provider    AIProvider
+  apiKey      String     @map("api_key")
+  label       String?
+  isActive    Boolean    @default(true)
+  usageCount  Int        @default(0) @map("usage_count")
+  usageLimit  Int?
+  createdAt   DateTime   @default(now()) @map("created_at")
+  updatedAt   DateTime   @updatedAt @map("updated_at")
+
+  user        User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([provider])
+  @@map("api_keys")
+}
+
+model GoogleCredential {
+  id              String          @id @default(uuid())
+  userId          String          @map("user_id")
+  credentialType  CredentialType  @map("credential_type")
+  label           String
+  credentialsJson String          @map("credentials_json") @db.Text
+  accessToken     String?         @map("access_token")
+  refreshToken    String?         @map("refresh_token")
+  tokenExpiresAt  DateTime?        @map("token_expires_at")
+  isActive        Boolean         @default(true)
+  permissions     Json            @default("[]")
+  createdAt       DateTime        @default(now()) @map("created_at")
+  updatedAt       DateTime        @updatedAt @map("updated_at")
+
+  user            User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("google_credentials")
+}
+
+model Conversation {
+  id             String          @id @default(uuid())
+  instanceId     String          @map("instance_id")
+  contactJid     String          @map("contact_jid")
+  direction      MessageDirection
+  messageType    MessageType     @default(text) @map("message_type")
+  content        String          @db.Text
+  aiResponse     String?         @map("ai_response") @db.Text
+  aiProvider     String?         @map("ai_provider")
+  tokensUsed     Int?            @map("tokens_used")
+  responseTimeMs Int?            @map("response_time_ms")
+  createdAt      DateTime        @default(now()) @map("created_at")
+
+  instance       Instance        @relation(fields: [instanceId], references: [id], onDelete: Cascade)
+
+  @@index([instanceId])
+  @@index([contactJid])
+  @@index([createdAt])
+  @@map("conversations")
+}
+
+model TelegramGroup {
+  id        String   @id @default(uuid())
+  botId     String   @map("bot_id")
+  groupId   String   @map("group_id")
+  groupName String?  @map("group_name")
+  settings  Json     @default("{}")
+  isActive  Boolean  @default(true)
+  addedAt   DateTime @default(now()) @map("added_at")
+
+  bot       Bot      @relation(fields: [botId], references: [id], onDelete: Cascade)
+
+  @@index([botId])
+  @@map("telegram_groups")
+}
+
+model AuditLog {
+  id         String   @id @default(uuid())
+  userId     String?  @map("user_id")
+  action     String
+  entityType String?  @map("entity_type")
+  entityId   String?  @map("entity_id")
+  details    Json     @default("{}")
+  ipAddress  String?  @map("ip_address")
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  user       User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([userId])
+  @@index([action])
+  @@index([createdAt])
+  @@map("audit_logs")
+}
+
+model Webhook {
+  id        String   @id @default(uuid())
+  botId     String   @map("bot_id")
+  eventType String   @map("event_type")
+  url       String
+  secret    String?
+  headers   Json     @default("{}")
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now()) @map("created_at")
+
+  bot       Bot      @relation(fields: [botId], references: [id], onDelete: Cascade)
+
+  @@index([botId])
+  @@map("webhooks")
+}

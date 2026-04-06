@@ -1,0 +1,52 @@
+# ============================================
+# COMANDOS GIT - K-Bot SaaS
+# ============================================
+
+# 1. INICIALIZAR REPOSITÓRIO (primeira vez)
+cd kbot-single
+git init
+git add .
+git commit -m "K-Bot SaaS - Versão completa"
+
+# 2. ADICIONAR REMOTE (substitua pelo seu repositório)
+git remote add origin https://github.com/SEU_USUARIO/kbot-saas.git
+
+# 3. ENVIAR PARA O GITHUB
+git branch -M main
+git push -u origin main
+
+# ============================================
+# COMANDOS PARA ATUALIZAR (após mudanças)
+# ============================================
+
+# Verificar alterações
+git status
+
+# Adicionar todas as alterações
+git add .
+
+# Commit com mensagem
+git commit -m "Descrição das alterações"
+
+# Enviar para GitHub
+git push origin main
+
+# ============================================
+# CLONAR NO VPS (depois)
+# ============================================
+
+# No VPS, clone o repositório:
+# cd /var/www
+# git clone https://github.com/SEU_USUARIO/kbot-saas.git kbot
+# cd kbot
+# chmod +x install.sh
+# sudo bash install.sh
+
+# ============================================
+# ATUALIZAR NO VPS (após push)
+# ============================================
+
+# cd /var/www/kbot
+# git pull origin main
+# npm run migrate
+# pm2 restart all
