@@ -1,0 +1,27 @@
+{
+  "name": "kbot-saas",
+  "version": "1.0.0",
+  "description": "K-Bot SaaS - Sistema Multi-Tenant para Bots de WhatsApp e Telegram com IA",
+  "main": "src/backend/index.js",
+  "type": "module",
+  "scripts": {
+    "install:all": "npm install && cd src/backend && npm install && cd ../frontend && npm install && cd ../engine && npm install",
+    "dev": "npm run dev:backend & npm run dev:frontend & npm run dev:engine",
+    "dev:backend": "cd src/backend && npm run dev",
+    "dev:frontend": "cd src/frontend && npm run dev",
+    "dev:engine": "cd src/engine && npm run dev",
+    "start": "pm2 start ecosystem.config.js",
+    "stop": "pm2 stop all",
+    "restart": "pm2 restart all",
+    "logs": "pm2 logs",
+    "status": "pm2 status",
+    "migrate": "cd src/backend && npx prisma migrate deploy",
+    "generate": "cd src/backend && npx prisma generate",
+    "build:frontend": "cd src/frontend && npm run build",
+    "lint": "cd src/backend && npm run lint",
+    "create-admin": "node scripts/create-admin.js"
+  },
+  "keywords": ["whatsapp", "telegram", "bot", "saas", "ai", "openai", "gemini"],
+  "author": "K-Bot",
+  "license": "MIT"
+}
