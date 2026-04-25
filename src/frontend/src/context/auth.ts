@@ -14,6 +14,7 @@ interface AuthState {
   token: string | null;
   isAuthenticated: boolean;
   login: (email: string, password: string) => Promise<void>;
+  loginWithGoogle: (tokenId: string, userInfo: any) => Promise<void>;
   register: (data: { name: string; email: string; password: string }) => Promise<void>;
   logout: () => void;
 }
@@ -26,13 +27,30 @@ export const useAuthStore = create<AuthState>()(
       isAuthenticated: false,
 
       login: async (email: string, password: string) => {
-        const { user, token } = await api.login(email, password);
-        set({ user, token, isAuthenticated: true });
+        const response = await api.login(email, password);
+        set({ 
+          user: response.user, 
+          token: response.token, 
+          isAuthenticated: true 
+        });
+      },
+
+      loginWithGoogle: async (tokenId: string, userInfo: any) => {
+        const response = await api.loginWithGoogle(tokenId, userInfo);
+        set({ 
+          user: response.user, 
+          token: response.token, 
+          isAuthenticated: true 
+        });
       },
 
       register: async (data) => {
-        const { user, token } = await api.register(data);
-        set({ user, token, isAuthenticated: true });
+        const response = await api.register(data);
+        set({ 
+          user: response.user, 
+          token: response.token, 
+          isAuthenticated: true 
+        });
       },
 
       logout: () => {
