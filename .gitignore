@@ -1,53 +1,49 @@
-# Dependências
+```
+# Dependencies
 node_modules/
-*/node_modules/
 
-# Variáveis de ambiente
+# Environment
 .env
 .env.local
-.env.*.local
-!.env.example
+.env.*
 
 # Logs
-logs/
 *.log
-npm-debug.log*
-pm2*.log
 
-# Build
+# Build artifacts
 dist/
 build/
-*.tgz
+target/
 
-# Sessões WhatsApp
-instances/
-sessions/
-*/instances/
-*/sessions/
-
-# Chrome/Chromium
-.user-data/
-
-# Upload
-uploads/
-*/uploads/
-
-# IDE
-.vscode/
-.idea/
-*.swp
-*.swo
-
-# SO
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.py~
+.Python
+env/
+venv/
+.venv/
+.venv.bak/
+pip-log.txt
+pip-delete-this-directory.txt
+.tox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+*.log
+*.pot
+*.pyc
+*.pyo
+*.pyd
+.MF
+.pytest_cache/
+.mypy_cache/
+.hypothesis/
 .DS_Store
 Thumbs.db
-
-# Testes
-coverage/
-
-# Cache
-.cache/
-.cache/
-
-# Credenciais Google
-config/google-service-account.json
+```
