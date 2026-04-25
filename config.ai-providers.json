@@ -1,0 +1,26 @@
+{
+  "ai_providers": {
+    "gemini": {
+      "api_key": "SUA_API_KEY_DO_GEMINI_AQUI",
+      "model": "gemini-pro",
+      "enabled": true,
+      "endpoint": "https://generativelanguage.googleapis.com/v1beta"
+    },
+    "groq": {
+      "api_key": "SUA_API_KEY_DO_GROQ_AQUI",
+      "model": "llama3-8b-8192",
+      "enabled": true,
+      "endpoint": "https://api.groq.com/openai/v1"
+    },
+    "openai": {
+      "api_key": "SUA_API_KEY_DA_OPENAI_AQUI",
+      "model": "gpt-3.5-turbo",
+      "enabled": false,
+      "endpoint": "https://api.openai.com/v1"
+    }
+  },
+  "default_provider": "gemini",
+  "fallback_enabled": true,
+  "timeout_ms": 30000,
+  "max_retries": 3
+}
